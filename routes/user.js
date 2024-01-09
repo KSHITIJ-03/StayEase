@@ -4,6 +4,10 @@ const User = require('../models/user');
 const passport = require('passport');
 const {storeReturnTo} = require('../middlewares');
 
+const authController = require("./../controllers/authController")
+
+const jwt = require("jsonwebtoken")
+
 //----------------------------------SignUp------------------------------------
 router.get('/register',(req,res)=>{
     res.render('user/loginRegister');
@@ -21,12 +25,14 @@ router.post('/register',async(req,res)=>{
             req.flash('success','Welcome to yelp-camp!');
             res.redirect('/houses');
         })
-        
     }catch(e){
         req.flash('error',e.message);
         res.redirect('/register');
     }
 })
+
+
+
 //------------------------------------------------------------------------------
 
 
@@ -43,8 +49,8 @@ router.post('/login',storeReturnTo,passport.authenticate('local', { failureRedir
     const redirectUrl = res.locals.returnTo||'/houses';
     
     res.redirect(redirectUrl);
-   
 })
+
 //----------------------------------------------------------------------------------
 
 

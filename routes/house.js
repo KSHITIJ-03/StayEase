@@ -9,12 +9,12 @@ const storage = require('../cloudinary/index');
 const { validateHouse, isLoggedIn, isAuthor } = require('../middlewares');
 const upload = multer(storage);
 
-const {cloudinary} = require('../cloudinary');
-const mbxGeocoding= require('@mapbox/mapbox-sdk/services/geocoding');
+//const {cloudinary} = require('../cloudinary');
+//const mbxGeocoding= require('@mapbox/mapbox-sdk/services/geocoding');
 
-const mapboxToken = process.env.MAPBOX_TOKEN;
+//const mapboxToken = process.env.MAPBOX_TOKEN;
 
-const geocoder = mbxGeocoding({accessToken:mapboxToken});
+//const geocoder = mbxGeocoding({accessToken:mapboxToken});
 
 
 
