@@ -13,46 +13,53 @@ router.get('/register',(req,res)=>{
     res.render('user/loginRegister');
 
 })
-router.post('/register',async(req,res)=>{
-    try{
-        const {email, username, password} = req.body;
-        const user =  new User({email,username})
-        const registeredUser =  await User.register(user,password);
+router.route("/register").post(authController.signup)
 
-        //without this You have to logIn again after signUp
-        req.login(registeredUser,err=>{
-            if(err) return next(err);
-            req.flash('success','Welcome to yelp-camp!');
-            res.redirect('/houses');
-        })
-    }catch(e){
-        req.flash('error',e.message);
-        res.redirect('/register');
-    }
-})
+// router.post('/register',async(req,res)=>{
+//     try{
+//         const {email, username, password} = req.body;
+//         const user =  new User({email,username})
+//         const registeredUser =  await User.register(user,password);
+
+//         //without this You have to logIn again after signUp
+//         req.login(registeredUser,err=>{
+//             if(err) return next(err);
+//             req.flash('success','Welcome to yelp-camp!');
+//             res.redirect('/houses');
+//         })
+//     }catch(e){
+//         req.flash('error',e.message);
+//         res.redirect('/register');
+//     }
+// })
 
 
 
 //------------------------------------------------------------------------------
 
-
-
-
 //-------------------------------Login------------------------------------------
+
 router.get('/login',(req,res)=>{
     res.render('user/loginRegister');
 })
 
-router.post('/login',storeReturnTo,passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),(req,res)=>{
-    req.flash('success','Welcome Back!');
+router.route("/login").post(authController.login)
 
-    const redirectUrl = res.locals.returnTo||'/houses';
+// router.post('/login',storeReturnTo,passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),(req,res)=>{
+//     req.flash('success','Welcome Back!');
+
+//     const redirectUrl = res.locals.returnTo||'/houses';
     
-    res.redirect(redirectUrl);
-})
+//     res.redirect(redirectUrl);
+// })
 
 //----------------------------------------------------------------------------------
 
+router.route("/updateMyPassword").patch(authController.protect, authController.updatePassword)
+
+router.route("/forgotPassword").post(authController.forgotPassword)
+
+router.route("/resetPassword/:token").patch(authController.resetPassword)
 
 
 

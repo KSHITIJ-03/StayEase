@@ -17,6 +17,9 @@ module.exports.validateHouse = (req,res,next)=>{
 }
 
 //----------------------to check user is loggedIn or Not (authorization)------------------------
+
+// for this i am using authenticate.protect route
+
 module.exports.isLoggedIn = (req,res,next)=>{
 
     if(!req.isAuthenticated()){

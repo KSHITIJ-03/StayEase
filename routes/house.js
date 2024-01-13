@@ -8,6 +8,7 @@ const multer  = require('multer')
 const storage = require('../cloudinary/index');
 const { validateHouse, isLoggedIn, isAuthor } = require('../middlewares');
 const upload = multer(storage);
+const authController = require("./../controllers/authController")
 
 //const {cloudinary} = require('../cloudinary');
 //const mbxGeocoding= require('@mapbox/mapbox-sdk/services/geocoding');
@@ -25,13 +26,29 @@ router.get('/',catchAsync(async(req,res)=>{
 
 }))
 
+// router.route("/").get(async (req, res) => {
+//     try {
+//         const houses = await House.find()
+//         res.status(200).json({
+//             status : "success",
+//             houses
+//         })
+//     } catch(err) {
+//         res.status(404).json({
+//             status : "fail",
+//             message : err
+//         })
+//     }
+    
+// })
+
 //---------------------Create-------------------------------
-router.get('/new',isLoggedIn,(req,res)=>{
+router.get('/new',authController.protect,(req,res)=>{
     
     res.render('house/new');
 })
 
-router.post('/',isLoggedIn,upload.array('house[images]'),validateHouse,catchAsync(async(req,res)=>{
+router.post('/',authController.protect,upload.array('house[images]'),validateHouse,catchAsync(async(req,res)=>{
     
     //forward geocoding the location the user entered and convert it into geojson
    const geodata =  await geocoder.forwardGeocode({
@@ -68,7 +85,7 @@ router.get('/:id',catchAsync(async(req,res)=>{
 
 //-----------------------Update-------------------------------
 
-router.get('/:id/edit',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
+router.get('/:id/edit',authController.protect,isAuthor,catchAsync(async(req,res)=>{
     const house = await House.findById(req.params.id);
     
     console.log(house);
@@ -76,7 +93,7 @@ router.get('/:id/edit',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
 }))
 
 
-router.put('/:id',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
+router.put('/:id',authController.protect,isAuthor,catchAsync(async(req,res)=>{
     const {id} = req.params;
     console.log(req.body);
     
@@ -89,7 +106,7 @@ router.put('/:id',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
 
 //---------------------Delete-----------------------------------
 
-router.delete('/:id',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
+router.delete('/:id',authController.protect,isAuthor,catchAsync(async(req,res)=>{
 
     const {id} = req.params;
     const house = await House.findById(id);
@@ -105,7 +122,7 @@ router.delete('/:id',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
 
 //------------------------addimages-----------------------------
 
-router.put('/:id/addImages',isLoggedIn,isAuthor,upload.array('images'),catchAsync(async(req,res)=>{
+router.put('/:id/addImages',authController.protect,isAuthor,upload.array('images'),catchAsync(async(req,res)=>{
     // console.log(req.body);
     const {id} = req.params;
     const house =await House.findById(id);
@@ -119,7 +136,7 @@ router.put('/:id/addImages',isLoggedIn,isAuthor,upload.array('images'),catchAsyn
 }))
 //------------------------deleteImages-----------------------------
 
-router.delete('/:id/deleteImages',isLoggedIn,isAuthor,catchAsync(async(req,res)=>{
+router.delete('/:id/deleteImages',authController.protect,isAuthor,catchAsync(async(req,res)=>{
     const {id} = req.params;
     const house = await House.findById(id);
     if(req.body.deleteImages){

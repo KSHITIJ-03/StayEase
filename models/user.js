@@ -1,74 +1,80 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const passportLocalMongoose=require('passport-local-mongoose');
+const mongoose = require("mongoose")
 const validator = require("validator")
 const bcrypt = require("bcrypt")
+const crypto = require("crypto")
 
-const UserSchema = new Schema({
-    email:{
-        type:String,
-        required:[true, "email is required"],
-        unique:[true, "user already exists"],
-        validate : [validator.isEmail, "email should of correct format"]
-    },
-    username : {
+const userSchema = new mongoose.Schema({
+    name : {
         type : String,
-        required : [true, "username is required"],
-        unique : [true, "username already taken"]
+        required : [true, "name is required"]
+    },
+    email : {
+        type : String,
+        required : [true, "email is required"],
+        unique : [true, "account with this email already exists"],
+        lowercase : true,
+        validate : [validator.isEmail, "email should be of proper format"]
     },
     password : {
         type : String,
-        min : [8, "password length must be larger than 8"],
         required : [true, "password is required"],
-        select : false
+        minLength : 8
+        //select : false
     },
     confirmPassword : {
         type : String,
-        required : [true, "confirm password is required"],
+        required : [true, "password is required to be confirmed"],
         validate : {
             validator : function(val) {
-                return this.password == val
+                return val === this.password
             },
-            message : "both the passwords should be same"
+            message : "both the passwords should match"
         }
     },
-    role : {
-        type : String,
-        enum : ["admin", "seller", "user"],
-        default : "user"
-    },
-    changePassword : Date  // latest password change time
-});
+    passwordChange : Date,
+    passwordResetToken : String,
+    passwordResetExpire : Date,
+},
+{
+    toJSON : {virttuals : true},
+    toObject : {virtuals : true}
+})
 
-// pre save hook to encrypt password and to set confirmPassword undefined
-
-UserSchema.pre("save", async function(next) {
+userSchema.pre("save", async function(next) {
     this.confirmPassword = undefined
-
-    if(!this.isModified("password")) return next()
-
     this.password = await bcrypt.hash(this.password, 12)
     next()
 })
 
-// instance method to check if the password is correct or not
+userSchema.pre("save", function(next){
+    if(!this.isModified("password") || this.isNew) return next()
+    this.passwordChange = Date.now() - 1000
+    next()
+})
 
-UserSchema.methods.correctPassword = async (candidatePassword, userPassword) => {
-    return await bcrypt.compare(candidatePassword, userPassword)
+userSchema.methods.correctPassword = async(candidatePassword, password) => {
+    return bcrypt.compare(candidatePassword, password)
 }
 
-// instance method to check if user have changed its password after a sign in
-
-UserSchema.methods.changePasswordAfter = function(JWT_TIMESTAMP) {
-
-    if(this.changePassword) {
+userSchema.methods.changePassword = function(JWTTimeStamp) {
+    if(this.passwordChange) {
         const changeTimeStamp = parseInt(this.passwordChange.getTime()/1000, 10)
-        return JWT_TIMESTAMP < changeTimeStamp
+        return JWTTimeStamp < changeTimeStamp
     }
+
     return false
 }
 
-// it will autometically add username and password field in UserSchema
-//UserSchema.plugin(passportLocalMongoose);
+userSchema.methods.createPasswordResetToken = function() {
+    const resetToken = crypto.randomBytes(32).toString("hex")
+    this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex")
+    this.passwordResetExpire = Date.now() + 10*60*1000
+    //console.log({resetToken}, this.passwordResetToken);
+    return resetToken
+}
 
-module.exports = mongoose.model('User',UserSchema);
+
+
+const User = new mongoose.model("User", userSchema)
+
+module.exports = User
